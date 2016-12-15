@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>three.js - gpu particle system</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			background-color: #000000;
+			margin: 0px;
+			overflow: hidden;
+		}
+
+		a {
+			color: #0078ff;
+		}
+
+		.dg {
+			right: auto!important;
+			left: 20px!important;
+		}
+	</style>
+</head>
+
+<body>
+	<div style="position: absolute; top: 10px; width: 100%; text-align: center; color:#eee">
+		<a href="http://threejs.org" target="_blank">three.js</a> - GPU particle system plugin by <a href="http://charliehoey.com">Charlie Hoey</a>.</div>
+
+	<script src="../build/three.js"></script>
+	<script src="./js/controls/TrackballControls.js"></script>
+	<script src="./js/libs/dat.gui.min.js"></script>
+	<script src="./js/GPUParticleSystem.js" charset="utf-8"></script>
+	<script src="./obj/Bird.js"></script>
+	<script src="../../js/birds.js"></script>
+
+
+	<script>
+		var camera, tick = 0,
+			scene, renderer, clock = new THREE.Clock(true),
+			controls, container, gui = new dat.GUI(),
+			options, spawnerOptions, particleSystem;
+
+
+		var birds = [];
+		var boids = [];
+
+		init();
+		animate();
+
+		function init() {
+
+
+			container = document.createElement('div');
+			document.body.appendChild(container);
+
+			camera = new THREE.PerspectiveCamera(28, window.innerWidth / window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene = new THREE.Scene();
+
+			// The GPU Particle system extends THREE.Object3D, and so you can use it
+			// as you would any other scene graph component.	Particle positions will be
+			// relative to the position of the particle system, but you will probably only need one
+			// system for your whole scene
+			particleSystem = new THREE.GPUParticleSystem({
+				maxParticles: 250000
+			});
+			scene.add( particleSystem);
+
+
+			// options passed during each spawned
+			options = {
+				position: new THREE.Vector3(),
+				positionRandomness: .3,
+				velocity: new THREE.Vector3(),
+				velocityRandomness: .5,
+				color: 0xaa88ff,
+				colorRandomness: .2,
+				turbulence: .5,
+				lifetime: 2,
+				size: 5,
+				sizeRandomness: 1
+			};
+
+			spawnerOptions = {
+				spawnRate: 15000,
+				horizontalSpeed: 1.5,
+				verticalSpeed: 1.33,
+				timeScale: 1
+			}
+
+			for ( var i = 0; i < 200; i ++ ) {
+				boid = boids[ i ] = new Boid();
+				boid.position.x = Math.random() * 400 - 200;
+				boid.position.y = Math.random() * 400 - 200;
+				boid.position.z = Math.random() * 400 - 200;
+				boid.velocity.x = Math.random() * 2 - 1;
+				boid.velocity.y = Math.random() * 2 - 1;
+				boid.velocity.z = Math.random() * 2 - 1;
+				boid.setAvoidWalls( true );
+				boid.setWorldSize( 300, 300, 200 );
+
+				bird = birds[ i ] = new THREE.Mesh( new Bird(), new THREE.MeshBasicMaterial( { color:Math.random() * 0xffffff, side: THREE.DoubleSide } ) );
+				bird.phase = Math.floor( Math.random() * 62.83 );
+				scene.add( bird );
+
+			}
+
+			gui.add(options, "velocityRandomness", 0, 3);
+			gui.add(options, "positionRandomness", 0, 3);
+			gui.add(options, "size", 1, 20);
+			gui.add(options, "sizeRandomness", 0, 25);
+			gui.add(options, "colorRandomness", 0, 1);
+			gui.add(options, "lifetime", .1, 10);
+			gui.add(options, "turbulence", 0, 1);
+
+			gui.add(spawnerOptions, "spawnRate", 10, 30000);
+			gui.add(spawnerOptions, "timeScale", -1, 1);
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			container.appendChild(renderer.domElement);
+
+			// setup controls
+			controls = new THREE.TrackballControls(camera, renderer.domElement);
+			controls.rotateSpeed = 5.0;
+			controls.zoomSpeed = 2.2;
+			controls.panSpeed = 1;
+			controls.dynamicDampingFactor = 0.3;
+
+			window.addEventListener('resize', onWindowResize, false);
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+		}
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+
+			controls.update();
+
+			for(var i = 0; i < birds.length; i++) {
+				boid = boids[ i ];
+				boid.run( boids );
+
+				bird = birds[ i ];
+				bird.position.copy( boids[ i ].position );
+
+				color = bird.material.color;
+				color.r = color.g = color.b = ( 500 - bird.position.z ) / 1000;
+
+				bird.rotation.y = Math.atan2( - boid.velocity.z, boid.velocity.x );
+				bird.rotation.z = Math.asin( boid.velocity.y / boid.velocity.length() );
+
+				bird.phase = ( bird.phase + ( Math.max( 0, bird.rotation.z ) + 0.1 )  ) % 62.83;
+				bird.geometry.vertices[ 5 ].y = bird.geometry.vertices[ 4 ].y = Math.sin( bird.phase ) * 5;
+
+				if(distanceVector(boid.position, options.position) < 5) {
+					boid.repulse(options.position);
+				}
+			}
+
+
+			var delta = clock.getDelta() * spawnerOptions.timeScale;
+			tick += delta;
+
+			if (tick < 0) tick = 0;
+
+			if (delta > 0) {
+				options.position.x = Math.sin(tick * spawnerOptions.horizontalSpeed) * 20;
+				options.position.y = Math.sin(tick * spawnerOptions.verticalSpeed) * 10;
+				options.position.z = Math.sin(tick * spawnerOptions.horizontalSpeed + spawnerOptions.verticalSpeed) * 5;
+
+				for (var x = 0; x < spawnerOptions.spawnRate * delta; x++) {
+					// Yep, that's really it.	Spawning particles is super cheap, and once you spawn them, the rest of
+					// their lifecycle is handled entirely on the GPU, driven by a time uniform updated below
+					particleSystem.spawnParticle(options);
+				}
+			}
+
+			particleSystem.update(tick);
+
+			render();
+
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
+
+		}
+
+		function distanceVector( v1, v2 ) {
+		    var dx = v1.x - v2.x;
+		    var dy = v1.y - v2.y;
+		    var dz = v1.z - v2.z;
+
+		    return Math.sqrt( dx * dx + dy * dy + dz * dz );
+		}
+
+	</script>
+</body>
+
+</html>

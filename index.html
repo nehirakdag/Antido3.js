@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+		<meta charset="utf-8">
+		<title>Antido3.js</title>
+
+		<link rel="StyleSheet" type="text/css" href="css/mainpage.css">
+		<link rel="StyleSheet" type="text/css" href="css/icomoon/style.css">
+
+	</head>
+
+	<body>
+        <div class="container">
+		
+            <div class="menu-top">
+				<a href="www.music.mcgill.ca/~akdag"> 
+					<strong> &laquo; Return to Mcgill Music Homepage </strong> 
+				</a>
+
+				<span class="menu-top-right">
+					<i class="i icon-play3" id="play"></i> 
+					<i class="i icon-pause2" id="pause"></i> 
+					<i class="i icon-stop2" id="stop"></i> 
+					<i class="i icon-volume-increase" id="volumeup"></i>
+					<i class="i icon-volume-decrease" id="volumedown"></i> 
+					<a href="#"> 
+						<strong> Created by Nehir Akdag, 2016 </strong> 
+					</a>
+				</span>
+
+				<div class="clr"> </div>
+			</div>
+			
+			<div class="main-container">
+
+				<input type="radio" name="radio-set" checked="checked" id="frame-1" onclick="mainTab()"/>
+					<a href="#window-1"> Antido3.js </a>
+
+				<input type="radio" name="radio-set" id="frame-2" onclick="birdsTab()"/>
+					<a href="#window-2"> Dancers </a>
+
+				<input type="radio" name="radio-set" id="frame-3" onclick="threeDTab()"/>
+					<a href="#window-3"> Cursors </a>
+
+				<input type="radio" name="radio-set" id="frame-4" onclick="bubblesTab()"/>
+					<a href="#window-4"> Bubbles </a>
+
+				<input type="radio" name="radio-set" id="frame-5" onclick="ringsTab()"/>
+					<a href="#window-5"> Rings </a>
+				
+				<div class="mover">
+				
+					<!-- Placeholder text from http://hipsteripsum.me/ -->
+					
+					<section class="window pastel" id="window-1">
+						<div class="deco"> <h3>Antido3.js</h3> </div>
+
+						<div class="dragdrop"> 
+							<input type="file" id="uploader" accept="audio/*" style="display:none;">
+
+							<div class="holder" id="holder"><p>Drag &amp; drop audio file here or manually upload using the button below!</p>
+								<i class="i icon-download3" id="dlbutton"></i> 
+							</div> 
+
+						</div>
+
+						<div class="infotext">
+							<p>Antido3.js is an Audio Visualizer Suite built for educational purposes as part of McGill University Music Technology Departement by student Nehir Akdag. It is  MUMT301's final class project for the Fall 2016 semester. The project involves an interactive website built using the HTML5, CSS3 and JavaScript languages. The website allows the user to upload any audio file of their choice. The uploaded file is processed in real-time using the WebAudio API and graphically rendered in multiple formats using the Three.js libraries. The icons at the top right corner enable users to control the audio flow.</p>
+						</div>
+
+					</section>
+
+					<section class="window grey" id="window-2">
+						<div class="deco"> <h3>Dancers&nbsp;FX</h3> </div>
+						<div class="dancers" id="dancers"></div>
+
+					</section>
+
+					<section class="window pastel" id="window-3">
+						<div class="deco"> <h3>3D&nbsp;Cursors</h3> </div>
+						<div class="info"> <p> Move mouse while: Left-clicking to rotate. Right-clicking to pan. Scroll to zoom.</p> </div>
+						<div class="threeD" id="threeD"></div>
+					</section>
+
+					<section class="window grey" id="window-4">
+						<div class="deco"> <h3>Bubble&nbsp;FX</h3> </div>
+						<div class="info"> <p> Move mouse while Left-clicking to rotate. Scroll to zoom. </p> </div>
+						<div class="stereo" id="stereo"></div>
+					</section>
+
+					<section class="window pastel" id="window-5">
+						<div class="deco"> <h3>Flow&nbsp;Rings</h3> </div>
+						<div class="info"> <p> Move mouse while: Left-clicking to rotate. Right-clicking to pan. Scroll to zoom.</p> </div>
+						<div class="rings" id="rings"></div>
+					</section>
+
+				</div>
+				
+			</div>
+			
+        </div>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+	<script src="./three.js-master/build/three.js"></script>
+	<script src="three.js-master/examples/js/shaders/CopyShader.js"></script>
+	<script src="three.js-master/examples/js/shaders/BokehShader.js"></script>
+	<script src="three.js-master/examples/js/shaders/DigitalGlitch.js"></script>
+	<script src="three.js-master/examples/js/postprocessing/EffectComposer.js"></script>
+	<script src="three.js-master/examples/js/postprocessing/RenderPass.js"></script>
+	<script src="three.js-master/examples/js/postprocessing/ShaderPass.js"></script>
+	<script src="three.js-master/examples/js/postprocessing/MaskPass.js"></script>
+	<script src="three.js-master/examples/js/postprocessing/BokehPass.js"></script>
+    <script src="three.js-master/examples/js/controls/TrackballControls.js"></script>
+    <script src="three.js-master/examples/js/postprocessing/GlitchPass.js"></script>
+    <script src="three.js-master/examples/obj/Bird.js"></script>
+    <script src="js/birds.js"></script>
+    <script src="three.js-master/examples/js/GPUParticleSystem.js" charset="utf-8"></script>
+	<script src="js/visual2d.js"></script>
+	<script src="js/dragdrop.js"></script>
+
+	<script id="vertexShader" type="x-shader/x-vertex">
+		uniform vec3 viewVector;
+		uniform float c;
+		uniform float p;
+		varying float intensity;
+		void main() 
+		{
+		    vec3 vNormal = normalize( normalMatrix * normal );
+			vec3 vNormel = normalize( normalMatrix * viewVector );
+			intensity = pow( c - dot(vNormal, vNormel), p );
+			
+		    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
+	</script>
+
+	<script id="fragmentShader" type="x-shader/x-vertex"> 
+		uniform vec3 glowColor;
+		varying float intensity;
+		void main() 
+		{
+			vec3 glow = glowColor * intensity;
+		    gl_FragColor = vec4( glow, 1.0 );
+		}
+	</script>
+	</body>
+</html>

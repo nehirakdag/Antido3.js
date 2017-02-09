@@ -205,8 +205,10 @@ function renderSelector() {
 	// Allows canvas management to reduce overhead.
 	// Note that canvas tabs do not display anything if
 	// no audio is playing
-
-	if(tabSelected != currentTab) {
+	if(tabSelected == currentTab) {
+		return;
+	}
+	else {
 		// If tab is changed, cancel the current animation frame
 		window.cancelAnimationFrame(requestID);
 
@@ -223,27 +225,35 @@ function renderSelector() {
 	
 	// Tab #2 is "Dancers"
 	if(tabSelected == 2) {
-		//twoDrender();
-		initDancers();
-		renderDancers();
+		if(audioUploaded) {
+			//twoDrender();
+			initDancers();
+			renderDancers();
+		}
 		currentTab = 2;
 	}
 	// Tab #2 is "3D Cursors"
 	else if(tabSelected == 3) {
-		initThrees();
-		threeDRenders();
+		if(audioUploaded) {
+			initThrees();
+			threeDRenders();
+		}
 		currentTab = 3;
 	}
 	// Tab #4 is "Bubbles"
 	else if(tabSelected == 4) {
-		initStereo();
-		stereoRender();
+		if(audioUploaded) {
+			initStereo();
+			stereoRender();
+		}
 		currentTab = 4;
 	}
 	// Tab #2 is "Flow Rings"
 	else if(tabSelected == 5) {
-		initRings();
-		ringsRender();
+		if(audioUploaded) {
+			initRings();
+			ringsRender();
+		}
 		currentTab = 5;
 	}
 }
@@ -339,6 +349,16 @@ function initDancers() {
 	// Add the renderer to the canvas DOM element
 	dancers.appendChild( renderer.domElement );
 
+	// Controls allow the user to use the Mouse to navigate through the scene
+    controls = new THREE.TrackballControls( camera );
+	controls.rotateSpeed = 1.0;
+	controls.zoomSpeed = 1.2;
+	controls.panSpeed = 0.8;
+	controls.noZoom = false;
+	controls.noPan = true;
+	controls.staticMoving = true;
+	controls.dynamicDampingFactor = 0.3;
+
 }
 
 // Render functions are continuously called as part of Three.js
@@ -391,7 +411,9 @@ function renderDancers() {
 		}
 	}
 
-	// Render the scene with the new conditions
+	// Render the scene with the updated controls (allows user
+	// to move through the scene with the mouse)
+	controls.update();
 	renderer.render( scene, camera );
 
 }
@@ -738,9 +760,9 @@ function stereoRender() {
 	// Render the scene with the updated controls (allows user
 	// to move through the scene with the mouse)
 	controls.update();
-	renderer.render( scene, camera );
+	//renderer.render( scene, camera );
 	//effect.render( scene, camera );
-	//postprocessing.composer.render( 0.1 );
+	postprocessing.composer.render( 0.1 );
 }
 
 // Helper function used to initialize effects that will be used to
@@ -770,7 +792,7 @@ function initStereoPostprocessing() {
 
 	composer.addPass( renderPass );
 	//composer.addPass( glitchPass );
-	//composer.addPass( bokehPass );
+	composer.addPass( bokehPass );
 
 	var effect = new THREE.ShaderPass( THREE.CopyShader );
     //effect.renderToScreen = true;
@@ -957,19 +979,19 @@ function ringsRender() {
 				if(timeArray[timeArray.length-1] > 150 && now - then > 100) {
 
 					// Find a random circle that is not moving (solely for random colors)
-					var random;
+					/*var random;
 					do{
 						random = Math.floor(Math.random() * 100);
-					} while(movingCircles[random]);
+					} while(movingCircles[random]);*/
 
 					// Transpose wave starts moving with a velocity based on the frequency array's level
 					// At this moment
-					var startingVelocity = frequencyArray[random * 5] / 10;
-					circles[random].outwardVelocity = 10;
+					var startingVelocity = frequencyArray[currentCircle * 5] / 10;
+					circles[currentCircle].outwardVelocity = 10;
 
 					// Call helper function to update vertices
-					circles[random].geometry.vertices = moveCircle(circles[random], startingVelocity * 2);
-					circles[random].geometry.verticesNeedUpdate = true;
+					circles[currentCircle].geometry.vertices = moveCircle(circles[currentCircle], startingVelocity * 2);
+					circles[currentCircle].geometry.verticesNeedUpdate = true;
 
 					// I was going to add different colors to rings based on levels but
 					// this will have to be a future goal for now
@@ -987,7 +1009,7 @@ function ringsRender() {
 					circles[random].material.needsUpdate = true; */
 
 					// Flag the circle as moving
-					movingCircles[random] = 1;
+					movingCircles[currentCircle] = 1;
 
 					currentCircle++;
 					then = now;

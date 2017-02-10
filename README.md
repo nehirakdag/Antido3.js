@@ -17,16 +17,16 @@ Tab 2 is a set of birds move around the canvas randomly. They are "scattered" or
 ### Cursors
 Tab 3 is a set of dynamic cursors moving on the canvas according to audio frequency levels. The idea is to have a better looking, responsive 3D cursors that visualize the audio flow.
 
-![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/cursors.gif)
+![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/cursors3.gif)
 
 ### Bubbles
 Tab 4 is a set of bubble-like spheres pseudo-randomly moving around the bounding box of the scene over time. They each light up firmly, producing a flash-like response to level peaks at each specific frequencies assigned to them. It is possible to "see" the sound as it peaks.
 
-![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/bubbles.gif)
+![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/bubbles2.gif)
 
 ### Rings
 Tab 5 is a set of rings that are produced at the center of the screen at each solid peak, extending outward after a shockwave-like entrance.
 
-![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/rings.gif)
+![alt text](https://github.com/nehirakdag/Antido3.js/blob/master/Images/rings3.gif)
 
 
